@@ -12,14 +12,14 @@
             display: flex;
             padding: 18px; 
             align-items: center;
-            justify-content: space-between
+            justify-content: space-between;
         }
         .UC-logo {
             width: 100px;  /* Adjust this number to make it smaller or larger */
         }
         .auth-group {
             display: flex;
-            gap: 15px;
+            gap: 30px; 
         
         }
         .nav-link {
@@ -44,4 +44,13 @@
 </body>
 
 
+
 </html>
+
+<?php
+session_start();
+if (!isset($_SESSION['username'])) {
+    header("Location: login.php"); // Send them back to login if they aren't logged in
+    exit;
+}
+?>

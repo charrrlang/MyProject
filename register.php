@@ -1,14 +1,33 @@
 <?php
-// This is PHP (runs on server)
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $username = $_POST["username"];
-    $email = $_POST["email"];
-    $password = $_POST["password"];
+require_once 'config.php';
+include 'db_connection.php';
 
-    // In a real app, you would save these to a database here
-    echo "Registration successful for " . $username;
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $user = $_POST['username'];
+    $email = $_POST['email'];
+    $pass = $_POST['password'];
+    $confirm = $_POST['confirm_password'];
+
+    if ($pass !== $confirm) {
+        echo "<script>alert('Passwords do not match!');</script>";
+    } else {
+        // Securely hash the password
+        $hashed_pass = password_hash($pass, PASSWORD_DEFAULT);
+
+        try {
+            $sql = "INSERT INTO users (username, email, password) VALUES (?, ?, ?)";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute([$user, $email, $hashed_pass]);
+            
+            echo "<script>alert('Registration Successful!'); window.location='login.php';</script>";
+        } catch (PDOException $e) {
+            echo "<script>alert('Error: Username or Email already exists.');</script>";
+        }
+    }
 }
 ?>
+
 
 <!DOCTYPE html>
 <html>
