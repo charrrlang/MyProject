@@ -34,6 +34,7 @@
             padding: 8px;
             border: 1px solid #ccc;
             border-radius: 4px;
+            
         }
 
         /* 5. Style the Login Button */
@@ -70,10 +71,12 @@
 
 <h2>Login Form</h2>
 
-<form method="POST">
-    <input type="text" name="username" placeholder="Username">
-    <input type="password" name="password" placeholder="Password">
+<form method="POST" action="login_handler.php">
+    <input type="text" name="username" placeholder="Username" required>
+    <input type="password" name="password" placeholder="Password" required>
+    
     <button type="submit">Login</button>
+    <a href="welcomepage.php" class="btn-cancel">Cancel</a>
 </form>
 
 </body>
