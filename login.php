@@ -1,38 +1,3 @@
-<?php
-session_start(); // Allows the user to stay logged in across pages
-require_once 'config.php';
-include 'config.php';
-
-
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $user = $_POST['username'];
-    $pass = $_POST['password'];
-
-    try {
-        // 1. Find the user by username
-        $sql = "SELECT * FROM users WHERE username = ?";
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute([$user]);
-        $userData = $stmt->fetch();
-
-        // 2. Check if user exists and verify password
-        if ($userData && password_verify($pass, $userData['password'])) {
-            // Success! Store user info in the session
-            $_SESSION['user_id'] = $userData['id'];
-            $_SESSION['username'] = $userData['username'];
-            
-            // Redirect to your welcome page
-            header("Location: welcomepage.php");
-            exit;
-        } else {
-            echo "<script>alert('Invalid username or password!');</script>";
-        }
-    } catch (PDOException $e) {
-        echo "Error: " . $e->getMessage();
-    }
-}
-?>
-
 <!DOCTYPE html>
 <html>
 <head>
