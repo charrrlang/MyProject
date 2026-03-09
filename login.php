@@ -3,80 +3,91 @@
 <head>
     <title>Login</title>
     <style>
-        a {
-            text-decoration: none;
-        }
-
-        /* 2. Basic styling for the body */
+        /* 1. Reset and Center Everything */
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6; /* Light grey background */
             margin: 0;
-            padding: 0;
             display: flex;
-            flex-direction: column;
+            justify-content: center;
             align-items: center;
+            height: 100vh; /* Full screen height */
         }
 
-        /* 3. Style the form container */
+        /* 2. Style the form container */
         form {
-            border: 1px solid #ccc;
-            padding: 20px;
-            border-radius: 4px;
-            width: 300px;
-            margin-top: 50px;
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Soft shadow */
+            width: 320px;
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 15px;
         }
 
-        /* 4. Style the inputs */
+        h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        /* 3. Style the inputs */
         input {
-            padding: 8px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: border-color 0.3s;
         }
 
-        /* 5. Style the Login Button */
-        button {
+        input:focus {
+            border-color: #1a2fa3;
+            outline: none;
+        }
+
+        /* 4. Style the Login Button */
+        .btn-login {
             background-color: #1a2fa3;
             color: white;
             border: none;
-            padding: 10px;
-            border-radius: 4px;
+            padding: 12px;
+            border-radius: 5px;
             cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: background 0.3s;
         }
 
-        button:hover {
-            background-color: #218838;
+        .btn-login:hover {
+            background-color: #142382;
         }
 
-        /* 6. Style the Cancel Link to look like a button */
-        .btn-cancel {
-            background-color: #f8f9fa;
-            color: #333;
-            border: 1px solid #ccc;
-            padding: 10px;
-            border-radius: 4px;
+        /* 5. Style the Sign Up Link */
+        .signup-link {
             text-align: center;
-            display: inline-block;
+            text-decoration: none;
+            color: #1a2fa3;
+            font-size: 14px;
+            margin-top: 5px;
         }
 
-        .btn-cancel:hover {
-            background-color: #e2e6ea;
+        .signup-link:hover {
+            text-decoration: underline;
         }
     </style>
 </head>
 <body>
 
-<h2>Login Form</h2>
-
 <form method="POST" action="login_handler.php">
+    <h2>Login</h2>
+    
     <input type="text" name="username" placeholder="Username" required>
     <input type="password" name="password" placeholder="Password" required>
     
-    <button type="submit">Login</button>
-    <a href="welcomepage.php" class="btn-cancel">Cancel</a>
+    <button type="submit" class="btn-login">Login</button>
+    
+    <a href="register.php" class="signup-link">Don't have an account? Sign Up</a>
 </form>
 
 </body>

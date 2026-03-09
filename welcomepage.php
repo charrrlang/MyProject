@@ -133,5 +133,31 @@
         </div>
     </header>
 
+    <div style="max-width: 900px; margin: 40px auto; padding: 20px; background: #fff; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.05);">
+    <h2 style="color: #1a2fa3; text-align: center;">Laboratory Rules</h2>
+    
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 30px;">
+        <div style="padding: 15px; border-left: 5px solid #1a2fa3; background: #f9f9f9;">
+            <h4 style="margin: 0 0 10px 0;">Proper Attire</h4>
+            <p style="font-size: 0.9rem; color: #555;">Students must follow the university dress code. Wearing of caps, sleeveless shirts, or shorts is strictly prohibited.</p>
+        </div>
+        
+        <div style="padding: 15px; border-left: 5px solid #1a2fa3; background: #f9f9f9;">
+            <h4 style="margin: 0 0 10px 0;">Cleanliness</h4>
+            <p style="font-size: 0.9rem; color: #555;">No eating or drinking inside the laboratory. Dispose of your trash properly before leaving.</p>
+        </div>
+
+        <div style="padding: 15px; border-left: 5px solid #1a2fa3; background: #f9f9f9;">
+            <h4 style="margin: 0 0 10px 0;">PC Usage</h4>
+            <p style="font-size: 0.9rem; color: #555;">Use only the PC number assigned to you. Do not move or swap peripherals like mice or keyboards.</p>
+        </div>
+
+        <div style="padding: 15px; border-left: 5px solid #1a2fa3; background: #f9f9f9;">
+            <h4 style="margin: 0 0 10px 0;">Accountability</h4>
+            <p style="font-size: 0.9rem; color: #555;">You are responsible for any hardware damage during your session. Report issues to the supervisor immediately.</p>
+        </div>
+    </div>
+</div>
+
 </body>
 </html>
