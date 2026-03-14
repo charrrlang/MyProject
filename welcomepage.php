@@ -105,6 +105,31 @@
             width: 100%;
             height: 15px;
         }
+
+        .footer {
+        background-color: #343a40; /* Dark gray to match professional UI */
+        padding: 20px 0;
+        margin-top: 40px; /* Space between content and footer */
+        width: 100%;
+        border-top: 4px solid #004a99; /* UC Blue accent line */
+        text-align: center;
+        }
+
+        .footer span {
+        font-size: 0.9rem;
+        font-family: 'Arial', sans-serif;
+        letter-spacing: 0.5px;
+        }
+
+        .footer {
+        margin-top: auto;
+        }
+        body {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+        }
+
     </style>
 </head>
 <body>
@@ -160,4 +185,12 @@
 </div>
 
 </body>
+
+<footer class="footer">
+        <div class = "container">
+            <span class=" text-white "> © 2024 College of Computer Studies
+
+            </span>
+        </div>
+</footer>
 </html>

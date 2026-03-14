@@ -3,36 +3,39 @@ session_start();
 include 'db_connect.php';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // 1. Basic Server-side validation to ensure fields aren't empty
-    if (empty($_POST['username']) || empty($_POST['password'])) {
+    $username = $_POST['username'];
+    $password = $_POST['password'];
+
+    if (empty($username) || empty($password)) {
         echo "<script>alert('Please fill in all fields'); window.history.back();</script>";
         exit();
     }
 
-    $username = $_POST['username'];
-    $password = $_POST['password'];
-
-    // 2. Fetch the user from the database
-    // Note: Ensure 'userName' matches your phpMyAdmin column exactly
+    // Search for the user
     $sql = "SELECT * FROM Users WHERE userName = '$username'";
     $result = $conn->query($sql);
 
     if ($result->num_rows > 0) {
         $row = $result->fetch_assoc();
         
-        // 3. Use password_verify to check the hashed password
+        // Verify hashed password
         if (password_verify($password, $row['Password'])) {
-            $_SESSION['user_id'] = $row['Id'];
-            $_SESSION['user_name'] = $row['userName'];
             
-            echo "<script>alert('Login Successful!'); window.location='dashboard.php';</script>";
+            // SAVE TO SESSION (This makes the data available on the homepage)
+            $_SESSION['id_number']   = $row['Id'];
+            $_SESSION['full_name']   = $row['FullName'];
+            $_SESSION['course']      = $row['Course'];
+            $_SESSION['course_lvl']  = $row['CourseLevel'];
+            $_SESSION['user_name']   = $row['userName'];
+            $_SESSION['email_address']  = $row['EmailAddress'];
+
+            echo "<script>alert('Login Successful!'); window.location='homepage.php';</script>";
         } else {
             echo "<script>alert('Incorrect Password'); window.history.back();</script>";
         }
     } else {
         echo "<script>alert('User not found'); window.history.back();</script>";
     }
-
     $conn->close();
 }
 ?>
