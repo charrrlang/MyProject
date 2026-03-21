@@ -1,0 +1,141 @@
+<?php
+session_start();
+include 'db_connect.php';
+
+// 1. Redirect if not logged in
+if (!isset($_SESSION['id_number'])) {
+    header("Location: login.php");
+    exit();
+}
+
+$id_number = $_SESSION['id_number'];
+
+// 2. Fetch Sit-in History for this specific student
+// We use 'student_id' as the column name that links to your users.Id
+$sql = "SELECT * FROM Sitin WHERE student_id = '$id_number' ORDER BY login_time DESC";
+$result = $conn->query($sql);
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sit-in History - CCS Monitoring</title>
+    <style>
+        /* Global Layout */
+        html, body { 
+            height: 100%; margin: 0; 
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #f4f7f6;
+            display: flex; flex-direction: column;
+        }
+
+        /* Header (Matching your screenshot) */
+        header {
+            background-color: #b0b1a8; display: flex;
+            padding: 10px 60px; align-items: center;
+            justify-content: space-between; border-bottom: 1px solid #999;
+        }
+        .system-title { font-size: 20px; font-weight: bold; color: #1a2fa3; margin: 0; }
+        .nav-link { color: #1a2fa3; text-decoration: none; font-weight: bold; font-size: 14px; margin-left: 20px; }
+
+        /* Main Body Wrapper */
+        .app-body { display: flex; flex: 1; overflow: hidden; }
+
+        /* Sidebar */
+        .sidebar {
+            width: 260px; background-color: #ffffff;
+            border-right: 2px solid #1a2fa3; padding: 30px 25px;
+        }
+        .sidebar h3 { color: #1a2fa3; border-bottom: 2px solid #f4f7f6; padding-bottom: 10px; margin-top: 0; }
+        .label { font-size: 10px; color: #888; text-transform: uppercase; font-weight: bold; display: block; }
+        .value { font-size: 15px; color: #333; font-weight: 600; display: block; margin-bottom: 20px; }
+
+        /* Content Area */
+        .main-content { flex-grow: 1; padding: 40px; overflow-y: auto; }
+        .history-card {
+            background: white; padding: 30px; border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+
+        /* Table Styling */
+        table { width: 100%; border-collapse: collapse; }
+        table th { background-color: #1a2fa3; color: white; text-align: left; padding: 12px; font-size: 14px; }
+        table td { padding: 12px; border-bottom: 1px solid #eee; color: #555; font-size: 14px; }
+        
+        .status-badge { padding: 5px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; }
+        .status-completed { background-color: #d4edda; color: #155724; }
+        .status-ongoing { background-color: #fff3cd; color: #856404; }
+
+        footer { background-color: #2c3e50; color: white; text-align: center; padding: 12px 0; font-size: 13px; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/68/University_of_Cebu_Logo.png/960px-University_of_Cebu_Logo.png" style="width: 40px;">
+            <h1 class="system-title">College of Computer Studies Sit-in Monitoring</h1>
+        </div>
+        <div class="auth-group">
+            <a href="homepage.php" class="nav-link">Home</a>
+            <a href="editprofile.php" class="nav-link">Edit Profile</a>
+            <a href="history.php" class="nav-link" style="text-decoration: underline;">History</a>
+            <a href="reservation.php" class="nav-link">Reservation</a>
+            <a href="welcomepage.php" class="nav-link" style="color: #d9534f;">Logout</a>
+        </div>
+    </header>
+
+    <div class="app-body">
+        <div class="sidebar">
+            <h3>Student Profile</h3>
+            <span class="label">ID Number</span>
+            <span class="value"><?php echo htmlspecialchars($_SESSION['id_number']); ?></span>
+            
+            <span class="label">Student Name</span>
+            <span class="value"><?php echo htmlspecialchars($_SESSION['full_name']); ?></span>
+        </div>
+
+        <div class="main-content">
+            <div class="history-card">
+                <h2 style="margin-top:0;">Sit-in History</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Purpose</th>
+                            <th>Lab Room</th>
+                            <th>Login Time</th>
+                            <th>Logout Time</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php 
+                        if ($result && $result->num_rows > 0) {
+                            while($row = $result->fetch_assoc()) {
+                                $logout = $row['logout_time'] ? date('M d, Y - h:i A', strtotime($row['logout_time'])) : "---";
+                                $status_class = $row['logout_time'] ? "status-completed" : "status-ongoing";
+                                $status_text = $row['logout_time'] ? "Completed" : "Ongoing";
+
+                                echo "<tr>
+                                        <td>" . htmlspecialchars($row['purpose']) . "</td>
+                                        <td>" . htmlspecialchars($row['lab_room']) . "</td>
+                                        <td>" . date('M d, Y - h:i A', strtotime($row['login_time'])) . "</td>
+                                        <td>$logout</td>
+                                        <td><span class='status-badge $status_class'>$status_text</span></td>
+                                      </tr>";
+                            }
+                        } else {
+                            echo "<tr><td colspan='5' style='text-align:center;'>No records found.</td></tr>";
+                        }
+                        ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <footer>&copy; 2024 College of Computer Studies</footer>
+
+</body>
+</html>

@@ -1,9 +1,20 @@
 <?php
 session_start();
+include 'db_connect.php'; // Ensure your database connection is included
+
 if (!isset($_SESSION['id_number'])) {
     header("Location: login.php");
     exit();
 }
+
+$id_number = $_SESSION['id_number'];
+
+// Fetch the latest user data including the profile picture
+$query = $conn->query("SELECT * FROM users WHERE Id = '$id_number'");
+$user = $query->fetch_assoc();
+
+// Fallback to a default image if no profile picture is set
+$profile_pic = !empty($user['profile_picture']) ? $user['profile_picture'] : 'default.png';
 ?>
 
 <!DOCTYPE html>
@@ -11,7 +22,7 @@ if (!isset($_SESSION['id_number'])) {
 <head>
     <title>Dashboard - Sit-in Monitoring</title>
     <style>
-        /* 1. Global Reset */
+        /* Global Reset */
         body { 
             font-family: 'Segoe UI', sans-serif; 
             margin: 0; 
@@ -21,9 +32,9 @@ if (!isset($_SESSION['id_number'])) {
             flex-direction: column; 
         }
         
-        /* 2. Header Styling - Matched to Rules Page */
+        /* Header Styling */
         header {
-            background-color: #b0b1a8; /* Specific grey from your screenshot */
+            background-color: #b0b1a8; 
             display: flex;
             padding: 15px 60px; 
             align-items: center;
@@ -39,7 +50,7 @@ if (!isset($_SESSION['id_number'])) {
         .system-title { 
             font-size: 22px; 
             font-weight: bold; 
-            color: #1a2fa3; /* UC Blue */
+            color: #1a2fa3; 
             margin: 0; 
         }
 
@@ -50,39 +61,15 @@ if (!isset($_SESSION['id_number'])) {
             font-weight: bold; 
             font-size: 15px;
         }
-        .nav-link:hover { text-decoration: underline; }
         
-        /* Dropdown Styling */
-        .dropbtn { 
-            background: none; 
-            border: none; 
-            color: #1a2fa3; 
-            cursor: pointer; 
-            font-size: 15px; 
-            font-weight: bold;
-            font-family: inherit; 
-            padding: 0;
-        }
-        .dropdown { position: relative; display: inline-block; }
-        .dropdown-content {
-            display: none;
-            position: absolute;
-            background-color: white;
-            min-width: 120px;
-            box-shadow: 0px 8px 16px rgba(0,0,0,0.2);
-            z-index: 1;
-        }
-        .dropdown-content a { color: black; padding: 12px 16px; text-decoration: none; display: block; }
-        .dropdown:hover .dropdown-content { display: block; }
-
-        /* 3. Layout Wrapper */
+        /* Layout Wrapper */
         .app-body {
             display: flex;
             flex-grow: 1; 
             overflow: hidden;
         }
 
-        /* 4. Sidebar Styling */
+        /* Sidebar Styling */
         .sidebar {
             width: 280px;
             background-color: #ffffff;
@@ -91,14 +78,40 @@ if (!isset($_SESSION['id_number'])) {
             display: flex;
             flex-direction: column;
             box-shadow: 2px 0 5px rgba(0,0,0,0.05);
+            align-items: center; /* Center the profile picture */
         }
 
-        .sidebar h3 { color: #1a2fa3; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-top: 0; }
-        .detail-box { margin-bottom: 20px; }
+        /* Profile Picture Styling */
+        .profile-pic-container {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 3px solid #1a2fa3;
+            overflow: hidden;
+            margin-bottom: 20px;
+            background-color: #eee;
+        }
+
+        .profile-pic-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .sidebar h3 { 
+            color: #1a2fa3; 
+            border-bottom: 1px solid #eee; 
+            padding-bottom: 10px; 
+            margin-top: 0; 
+            width: 100%;
+            text-align: left;
+        }
+
+        .detail-box { margin-bottom: 20px; width: 100%; text-align: left; }
         .label { font-size: 11px; color: #888; text-transform: uppercase; font-weight: bold; display: block; }
         .value { font-size: 16px; color: #333; font-weight: 600; }
 
-        /* 5. Main Content Area */
+        /* Main Content */
         .main-content {
             flex-grow: 1;
             padding: 50px;
@@ -113,7 +126,6 @@ if (!isset($_SESSION['id_number'])) {
             text-align: center;
         }
 
-        /* 6. Footer */
         footer {
             background-color: #2c3e50;
             color: white;
@@ -132,9 +144,9 @@ if (!isset($_SESSION['id_number'])) {
         </div>
 
         <div class="auth-group">
-            <a href="homepage.php" class="nav-link">Home</a>
+            <a href="homepage.php" class="nav-link" style="text-decoration: underline;">Home</a>
             <a href="editprofile.php" class="nav-link">Edit Profile</a>
-            <a href="History.php" class="nav-link">History</a>
+            <a href="history.php" class="nav-link">History</a>
             <a href="reservation.php" class="nav-link">Reservation</a>
             <a href="welcomepage.php" class="nav-link" style="color: #d9534f;">Logout</a>
         </div>
@@ -142,32 +154,36 @@ if (!isset($_SESSION['id_number'])) {
 
     <div class="app-body">
         <div class="sidebar">
+            <div class="profile-pic-container">
+                <img src="uploads/<?php echo $profile_pic; ?>" alt="Profile Picture">
+            </div>
+
             <h3>Student Profile</h3>
             
             <div class="detail-box">
                 <span class="label">ID Number</span>
-                <span class="value"><?php echo $_SESSION['id_number']; ?></span>
+                <span class="value"><?php echo htmlspecialchars($user['Id']); ?></span>
             </div>
 
             <div class="detail-box">
                 <span class="label">Student Name</span>
-                <span class="value"><?php echo $_SESSION['full_name']; ?></span>
+                <span class="value"><?php echo htmlspecialchars($user['FullName']); ?></span>
             </div>
 
             <div class="detail-box">
                 <span class="label">Course & Year</span>
-                <span class="value"><?php echo $_SESSION['course'] . " - " . $_SESSION['course_lvl']; ?></span>
+                <span class="value"><?php echo htmlspecialchars($user['Course'] . " - " . $user['CourseLevel']); ?></span>
             </div>
 
             <div class="detail-box">
                 <span class="label">Email Address</span>
-                <span class="value"><?php echo $_SESSION['email_address']; ?></span>
+                <span class="value"><?php echo htmlspecialchars($user['EmailAddress']); ?></span>
             </div>
         </div>
 
         <div class="main-content">
             <div class="welcome-card">
-                <h1>Welcome, <?php echo $_SESSION['full_name']; ?>!</h1>
+                <h1>Welcome, <?php echo htmlspecialchars($user['FullName']); ?>!</h1>
                 <p>Select an option from the sidebar to manage your sit-in sessions.</p>
             </div>
         </div>
