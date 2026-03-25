@@ -2,99 +2,178 @@
 session_start();
 include 'db_connect.php';
 
+// Check if Admin is logged in
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Admin') {
     header("Location: login.php");
     exit();
 }
 
-$search = isset($_POST['search_input']) ? $_POST['search_input'] : "";
-// Fetch students and their remaining sessions
-$students = $conn->query("SELECT Id, FullName, Course, CourseLevel, SessionsRemaining FROM Users WHERE Id LIKE '%$search%' OR FullName LIKE '%$search%' LIMIT 5");
+// 1. Fetch Stats for Home View
+$total_students = $conn->query("SELECT COUNT(*) as count FROM users")->fetch_assoc()['count'];
+$active_sitin = $conn->query("SELECT COUNT(*) as count FROM sitin_records WHERE status = 'Approved'")->fetch_assoc()['count'];
 
-$active_sessions = $conn->query("SELECT * FROM sitin_records WHERE status = 'Active'");
+// 2. Fetch Pie Chart Data
+$chart_sql = $conn->query("SELECT purpose, COUNT(*) as count FROM sitin_records GROUP BY purpose");
+$purposes = []; $counts = [];
+while($row = $chart_sql->fetch_assoc()) {
+    $purposes[] = $row['purpose'];
+    $counts[] = $row['count'];
+}
 ?>
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Admin - Sit-in Management</title>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard - CCS Sit-in</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; margin: 0; }
-        header { background: #b0b1a8; padding: 15px 50px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #999; }
-        .admin-wrapper { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 30px; }
-        .admin-card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        h3 { color: #1a2fa3; margin-top: 0; border-bottom: 2px solid #f4f7f6; padding-bottom: 10px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th { background: #1a2fa3; color: white; padding: 10px; text-align: left; font-size: 12px; }
-        td { padding: 10px; border-bottom: 1px solid #eee; font-size: 13px; }
+        body { font-family: Arial, sans-serif; background-color: #f8f9fa; margin: 0; }
         
-        /* Session Counter Styles */
-        .count-badge { padding: 2px 8px; border-radius: 10px; font-weight: bold; font-size: 11px; }
-        .count-ok { background: #d4edda; color: #155724; }
-        .count-low { background: #fff3cd; color: #856404; }
-        .count-empty { background: #f8d7da; color: #721c24; }
+        /* Navigation Bar matching image_8c2dfe.jpg */
+        .admin-navbar {
+            background-color: #004a99; 
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 25px;
+            color: white;
+        }
+        .nav-brand { font-weight: bold; font-size: 14px; }
+        .nav-links { display: flex; align-items: center; gap: 15px; }
+        .nav-links a { color: white; text-decoration: none; font-size: 12px; cursor: pointer; }
+        .nav-links a:hover { text-decoration: underline; color: #ffcd56; }
+        .btn-logout { 
+            background-color: #ffc107; color: black !important; 
+            padding: 5px 12px; border-radius: 4px; font-weight: bold; 
+        }
 
-        .btn { padding: 6px 12px; border-radius: 4px; text-decoration: none; font-weight: bold; font-size: 11px; color: white; border: none; cursor: pointer; display: inline-block; }
-        .btn-start { background: #28a745; }
-        .btn-disabled { background: #ccc; cursor: not-allowed; }
-        .btn-end { background: #d9534f; }
+        /* Layout containers */
+        .home-content { display: flex; gap: 20px; padding: 25px; max-width: 1200px; margin: auto; }
+        .search-content { display: none; padding: 50px; text-align: center; } /* Hidden by default */
+        
+        .card { background: white; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.2); flex: 1; border: 1px solid #ddd; }
+        .card-header { background: #007bff; color: white; padding: 10px; font-weight: bold; font-size: 14px; }
+        .card-body { padding: 20px; }
+
+        /* Search Input Styling */
+        .search-box { padding: 12px; width: 350px; border: 2px solid #004a99; border-radius: 5px; font-size: 16px; }
+        .btn-search { padding: 12px 25px; background: #004a99; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
 
-<header>
-    <h2 style="color: #1a2fa3; margin: 0;">CCS Admin Dashboard</h2>
-    <a href="welcomepage.php" style="color: #d9534f; font-weight: bold; text-decoration: none;">Logout</a>
-</header>
-
-<div class="admin-wrapper">
-    <div class="admin-card">
-        <h3>Search & Initiate</h3>
-        <form method="POST" style="margin-bottom: 15px;">
-            <input type="text" name="search_input" placeholder="Search ID/Name..." value="<?php echo htmlspecialchars($search); ?>" style="padding: 8px; width: 60%; border: 1px solid #ddd; border-radius: 4px;">
-            <button type="submit" style="background:#1a2fa3; color:white; border:none; padding:8px 15px; border-radius:4px; cursor:pointer;">Search</button>
-        </form>
-        <table>
-            <thead><tr><th>ID</th><th>Name</th><th>Sess. Left</th><th>Action</th></tr></thead>
-            <tbody>
-                <?php while($row = $students->fetch_assoc()): 
-                    $remaining = $row['SessionsRemaining'];
-                    $class = ($remaining > 10) ? 'count-ok' : (($remaining > 0) ? 'count-low' : 'count-empty');
-                ?>
-                <tr>
-                    <td><?php echo $row['Id']; ?></td>
-                    <td><?php echo $row['FullName']; ?></td>
-                    <td><span class="count-badge <?php echo $class; ?>"><?php echo $remaining; ?></span></td>
-                    <td>
-                        <?php if($remaining > 0): ?>
-                            <a href="initiate_session.php?id=<?php echo $row['Id']; ?>" class="btn btn-start">Start</a>
-                        <?php else: ?>
-                            <span class="btn btn-disabled" title="No sessions remaining">Start</span>
-                        <?php endif; ?>
-                    </td>
-                </tr>
-                <?php endwhile; ?>
-            </tbody>
-        </table>
+<nav class="admin-navbar">
+    <div class="nav-brand">College of Computer Studies Admin</div>
+    <div class="nav-links">
+        <a onclick="showView('home')">Home</a>
+        <a onclick="showView('search')">Search</a>
+        <a href="student_list.php">Students</a>
+        <a onclick="showView('search')">Sit-in</a>
+        <a href="view_sitin_records.php">View Sit-in Records</a>
+        <a href="sitin_reports.php">Sit-in Reports</a>
+        <a href="feedback_reports.php">Feedback Reports</a>
+        <a href="reservation_admin.php">Reservation</a>
+        <a href="welcomepage.php" class="btn-logout">Log out</a>
     </div>
+</nav>
 
-    <div class="admin-card">
-        <h3>Current Sit-in Sessions</h3>
-        <table>
-            <thead><tr><th>ID</th><th>Name</th><th>Time In</th><th>Action</th></tr></thead>
-            <tbody>
-                <?php while($active = $active_sessions->fetch_assoc()): ?>
-                <tr>
-                    <td><?php echo $active['id_number']; ?></td>
-                    <td><?php echo $active['fullname']; ?></td>
-                    <td><?php echo date('h:i A', strtotime($active['login_time'])); ?></td>
-                    <td><a href="end_session.php?id=<?php echo $active['id']; ?>&sid=<?php echo $active['id_number']; ?>" class="btn btn-end">End Session</a></td>
-                </tr>
-                <?php endwhile; ?>
-            </tbody>
-        </table>
+<div id="home-view" class="home-content">
+    <div class="card">
+        <div class="card-header">📊 Statistics</div>
+        <div class="card-body">
+            <p><b>Students Registered:</b> <?php echo $total_students; ?></p>
+            <p><b>Currently Sit-in:</b> <?php echo $active_sitin; ?></p>
+            <p><b>Total Sit-in:</b> 15</p>
+            <div style="height: 250px;"><canvas id="purposeChart"></canvas></div>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-header">📢 Announcement</div>
+        <div class="card-body">
+            <form action="post_announcement.php" method="POST">
+                <textarea name="content" style="width:100%; height:80px;" placeholder="New Announcement"></textarea><br>
+                <button type="submit" style="background:#28a745; color:white; border:none; padding:8px; margin-top:10px; cursor:pointer;">Submit</button>
+            </form>
+            <h4 style="border-bottom:1px solid #eee; margin-top:20px;">Posted Announcement</h4>
+            <p style="font-size:11px; color:#666;">CCS Admin | 2026-Feb-11</p>
+            <p>Welcome to the CCS Sit-in Monitoring System!</p>
+        </div>
     </div>
 </div>
+
+<div id="search-view" class="search-content">
+    <h1 style="color: #004a99; margin-bottom: 30px;">Search Student</h1>
+    <form action="admin_dashboard.php" method="GET">
+        <input type="text" name="search_id" class="search-box" placeholder="Enter ID Number (e.g. 213000)..." required>
+        <button type="submit" name="search" class="btn-search">Search</button>
+    </form>
+
+    <?php
+    if (isset($_GET['search'])) {
+        // If a search is made, ensure we stay in the Search View
+        echo "<script>document.addEventListener('DOMContentLoaded', function() { showView('search'); });</script>";
+        
+        $search_id = $_GET['search_id'];
+        $user_res = $conn->query("SELECT * FROM users WHERE Id = '$search_id'");
+        
+        if ($user = $user_res->fetch_assoc()) {
+            $res_query = $conn->query("SELECT * FROM sitin_records WHERE id_number = '$search_id' AND status = 'Pending' LIMIT 1");
+            $reservation = $res_query->fetch_assoc();
+
+            echo "
+            <div class='card' style='max-width: 500px; margin: 40px auto; text-align: left; border-top: 5px solid #28a745;'>
+                <div class='card-header' style='background:#28a745'>Sit In Form</div>
+                <div class='card-body'>
+                    <form action='process_sitin.php' method='POST'>
+                        <p><b>Student Name:</b> {$user['FullName']}</p>
+                        <p><b>ID Number:</b> {$user['Id']}</p>
+                        <input type='hidden' name='id_number' value='{$user['Id']}'>
+                        
+                        <label>Purpose:</label><br>
+                        <input type='text' name='purpose' value='" . ($reservation['purpose'] ?? '') . "' required style='width:95%; padding:10px; margin-bottom:15px;'><br>
+                        
+                        <label>Lab Room:</label><br>
+                        <input type='text' name='lab_room' value='" . ($reservation['lab_room'] ?? '') . "' required style='width:95%; padding:10px; margin-bottom:15px;'><br>
+                        
+                        <p><b>Remaining Sessions:</b> {$user['SessionsRemaining']}</p>
+                        <button type='submit' style='background:#28a745; color:white; width:100%; padding:15px; border:none; font-weight:bold; cursor:pointer;'>CONFIRM SIT-IN</button>
+                    </form>
+                </div>
+            </div>";
+        } else {
+            echo "<p style='color:red; font-weight:bold; margin-top:20px;'>No student found with ID: " . htmlspecialchars($search_id) . "</p>";
+        }
+    }
+    ?>
+</div>
+
+<script>
+    // Logic to toggle between Home and Search views
+    function showView(viewName) {
+        if (viewName === 'search') {
+            document.getElementById('home-view').style.display = 'none';
+            document.getElementById('search-view').style.display = 'block';
+        } else {
+            document.getElementById('home-view').style.display = 'flex';
+            document.getElementById('search-view').style.display = 'none';
+        }
+    }
+
+    // Pie Chart Logic
+    const ctx = document.getElementById('purposeChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: <?php echo json_encode($purposes); ?>,
+            datasets: [{
+                data: <?php echo json_encode($counts); ?>,
+                backgroundColor: ['#36a2eb', '#ff6384', '#ffcd56', '#4bc0c0', '#9966ff']
+            }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+    });
+</script>
 
 </body>
 </html>

@@ -10,8 +10,7 @@ if (!isset($_SESSION['id_number'])) {
 
 $id_number = $_SESSION['id_number'];
 
-// 2. Fetch Sit-in History using the correct column name: 'id_number'
-// We also use a prepared statement for better security
+// 2. Fetch Sit-in History
 $stmt = $conn->prepare("SELECT * FROM sitin_records WHERE id_number = ? ORDER BY login_time DESC");
 $stmt->bind_param("s", $id_number);
 $stmt->execute();
@@ -59,9 +58,11 @@ $result = $stmt->get_result();
         table th { background-color: #1a2fa3; color: white; text-align: left; padding: 12px; font-size: 14px; }
         table td { padding: 12px; border-bottom: 1px solid #eee; color: #555; font-size: 14px; }
         
+        /* Status Badge Styles */
         .status-badge { padding: 5px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; }
         .status-completed { background-color: #d4edda; color: #155724; }
         .status-ongoing { background-color: #fff3cd; color: #856404; }
+        .status-pending { background-color: #ffe5d0; color: #d35400; } /* New Orange Style for Pending */
 
         footer { background-color: #2c3e50; color: white; text-align: center; padding: 12px 0; font-size: 13px; }
     </style>
@@ -109,14 +110,22 @@ $result = $stmt->get_result();
                         <?php 
                         if ($result && $result->num_rows > 0) {
                             while($row = $result->fetch_assoc()) {
-                                // Formatting the dates
                                 $login_fmt = date('M d, Y - h:i A', strtotime($row['login_time']));
                                 $logout_fmt = $row['logout_time'] ? date('M d, Y - h:i A', strtotime($row['logout_time'])) : "---";
                                 
-                                // Logic for Status badge
-                                $is_done = ($row['status'] === 'Completed' || !empty($row['logout_time']));
-                                $status_class = $is_done ? "status-completed" : "status-ongoing";
-                                $status_text = $is_done ? "Completed" : "Ongoing";
+                                // UPDATED DYNAMIC STATUS LOGIC
+                                $current_status = $row['status']; 
+
+                                if ($current_status === 'Pending') {
+                                    $status_class = "status-pending";
+                                    $status_text = "Pending";
+                                } elseif ($current_status === 'Approved') {
+                                    $status_class = "status-ongoing";
+                                    $status_text = "Ongoing";
+                                } else {
+                                    $status_class = "status-completed";
+                                    $status_text = htmlspecialchars($current_status);
+                                }
 
                                 echo "<tr>
                                         <td>" . htmlspecialchars($row['purpose'] ?? 'N/A') . "</td>
