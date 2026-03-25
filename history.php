@@ -10,10 +10,12 @@ if (!isset($_SESSION['id_number'])) {
 
 $id_number = $_SESSION['id_number'];
 
-// 2. Fetch Sit-in History for this specific student
-// We use 'student_id' as the column name that links to your users.Id
-$sql = "SELECT * FROM Sitin WHERE student_id = '$id_number' ORDER BY login_time DESC";
-$result = $conn->query($sql);
+// 2. Fetch Sit-in History using the correct column name: 'id_number'
+// We also use a prepared statement for better security
+$stmt = $conn->prepare("SELECT * FROM sitin_records WHERE id_number = ? ORDER BY login_time DESC");
+$stmt->bind_param("s", $id_number);
+$stmt->execute();
+$result = $stmt->get_result();
 ?>
 
 <!DOCTYPE html>
@@ -22,7 +24,6 @@ $result = $conn->query($sql);
     <meta charset="UTF-8">
     <title>Sit-in History - CCS Monitoring</title>
     <style>
-        /* Global Layout */
         html, body { 
             height: 100%; margin: 0; 
             font-family: 'Segoe UI', sans-serif;
@@ -30,7 +31,6 @@ $result = $conn->query($sql);
             display: flex; flex-direction: column;
         }
 
-        /* Header (Matching your screenshot) */
         header {
             background-color: #b0b1a8; display: flex;
             padding: 10px 60px; align-items: center;
@@ -39,10 +39,8 @@ $result = $conn->query($sql);
         .system-title { font-size: 20px; font-weight: bold; color: #1a2fa3; margin: 0; }
         .nav-link { color: #1a2fa3; text-decoration: none; font-weight: bold; font-size: 14px; margin-left: 20px; }
 
-        /* Main Body Wrapper */
         .app-body { display: flex; flex: 1; overflow: hidden; }
 
-        /* Sidebar */
         .sidebar {
             width: 260px; background-color: #ffffff;
             border-right: 2px solid #1a2fa3; padding: 30px 25px;
@@ -51,14 +49,12 @@ $result = $conn->query($sql);
         .label { font-size: 10px; color: #888; text-transform: uppercase; font-weight: bold; display: block; }
         .value { font-size: 15px; color: #333; font-weight: 600; display: block; margin-bottom: 20px; }
 
-        /* Content Area */
         .main-content { flex-grow: 1; padding: 40px; overflow-y: auto; }
         .history-card {
             background: white; padding: 30px; border-radius: 8px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.08);
         }
 
-        /* Table Styling */
         table { width: 100%; border-collapse: collapse; }
         table th { background-color: #1a2fa3; color: white; text-align: left; padding: 12px; font-size: 14px; }
         table td { padding: 12px; border-bottom: 1px solid #eee; color: #555; font-size: 14px; }
@@ -75,7 +71,7 @@ $result = $conn->query($sql);
     <header>
         <div style="display: flex; align-items: center; gap: 15px;">
             <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/68/University_of_Cebu_Logo.png/960px-University_of_Cebu_Logo.png" style="width: 40px;">
-            <h1 class="system-title">College of Computer Studies Sit-in Monitoring</h1>
+            <h1 class="system-title">CCS Sit-in Monitoring</h1>
         </div>
         <div class="auth-group">
             <a href="homepage.php" class="nav-link">Home</a>
@@ -113,20 +109,25 @@ $result = $conn->query($sql);
                         <?php 
                         if ($result && $result->num_rows > 0) {
                             while($row = $result->fetch_assoc()) {
-                                $logout = $row['logout_time'] ? date('M d, Y - h:i A', strtotime($row['logout_time'])) : "---";
-                                $status_class = $row['logout_time'] ? "status-completed" : "status-ongoing";
-                                $status_text = $row['logout_time'] ? "Completed" : "Ongoing";
+                                // Formatting the dates
+                                $login_fmt = date('M d, Y - h:i A', strtotime($row['login_time']));
+                                $logout_fmt = $row['logout_time'] ? date('M d, Y - h:i A', strtotime($row['logout_time'])) : "---";
+                                
+                                // Logic for Status badge
+                                $is_done = ($row['status'] === 'Completed' || !empty($row['logout_time']));
+                                $status_class = $is_done ? "status-completed" : "status-ongoing";
+                                $status_text = $is_done ? "Completed" : "Ongoing";
 
                                 echo "<tr>
-                                        <td>" . htmlspecialchars($row['purpose']) . "</td>
-                                        <td>" . htmlspecialchars($row['lab_room']) . "</td>
-                                        <td>" . date('M d, Y - h:i A', strtotime($row['login_time'])) . "</td>
-                                        <td>$logout</td>
+                                        <td>" . htmlspecialchars($row['purpose'] ?? 'N/A') . "</td>
+                                        <td>" . htmlspecialchars($row['lab_room'] ?? 'N/A') . "</td>
+                                        <td>" . $login_fmt . "</td>
+                                        <td>" . $logout_fmt . "</td>
                                         <td><span class='status-badge $status_class'>$status_text</span></td>
                                       </tr>";
                             }
                         } else {
-                            echo "<tr><td colspan='5' style='text-align:center;'>No records found.</td></tr>";
+                            echo "<tr><td colspan='5' style='text-align:center;'>No records found for ID: " . htmlspecialchars($id_number) . "</td></tr>";
                         }
                         ?>
                     </tbody>
@@ -135,7 +136,7 @@ $result = $conn->query($sql);
         </div>
     </div>
 
-    <footer>&copy; 2024 College of Computer Studies</footer>
+    <footer>&copy; 2026 College of Computer Studies</footer>
 
 </body>
 </html>

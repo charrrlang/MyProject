@@ -125,7 +125,7 @@ $user = $user_query->fetch_assoc();
         <a href="editprofile.php" style="text-decoration: underline;">Edit Profile</a>
         <a href="history.php">History</a>
         <a href="reservation.php">Reservation</a>
-        <a href="logout.php" style="color: #d9534f;">Logout</a>
+        <a href="welcomepage.php" style="color: #d9534f;">Logout</a>
     </div>
 </header>
 

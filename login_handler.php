@@ -13,16 +13,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     // This ignores the database entirely for these specific words
     if ($username === 'admin' && $password === 'admin') {
-        $_SESSION['role'] = 'Admin';
+        $_SESSION['role'] = 'Admin'; // Set role to distinguish from students
         $_SESSION['full_name'] = 'System Administrator';
-        $_SESSION['user_name'] = 'admin';
         $_SESSION['id_number'] = 'ADMIN-01';
-        $_SESSION['course'] = 'CCS';
-       
 
-        echo "<script>alert('Welcome Admin!'); window.location='homepage.php';</script>";
+        // REDIRECT TO ADMIN DASHBOARD INSTEAD
+        echo "<script>alert('Welcome Admin!'); window.location='admin_dashboard.php';</script>";
         exit();
     }
+    
     // Search for the user
     $sql = "SELECT * FROM Users WHERE userName = '$username'";
     $result = $conn->query($sql);
